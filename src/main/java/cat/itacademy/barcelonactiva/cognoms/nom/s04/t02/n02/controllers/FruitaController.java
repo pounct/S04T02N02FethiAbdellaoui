@@ -1,9 +1,12 @@
 package cat.itacademy.barcelonactiva.cognoms.nom.s04.t02.n02.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,47 +15,64 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import cat.itacademy.barcelonactiva.cognoms.nom.s04.t02.n02.entities.Fruita;
+import cat.itacademy.barcelonactiva.cognoms.nom.s04.t02.n02.model.services.FruitaService;
+import cat.itacademy.barcelonactiva.cognoms.nom.s04.t02.n02.model.domain.Fruita;
 import cat.itacademy.barcelonactiva.cognoms.nom.s04.t02.n02.model.repository.FruitaRepository;
 
 @RestController
 public class FruitaController implements IFruitaController {
 
 	@Autowired
-	FruitaRepository fruitaRepository;
+	FruitaService fruitaService;
 
-	@PostMapping("/fruita/add")
+	@PostMapping("/add")
 	@Override
-	public void add(@RequestBody Fruita fruita) {
-		// add fruita
-		fruitaRepository.save(fruita);
+	public ResponseEntity<Fruita> add(@RequestBody Fruita fruita) {
+		fruitaService.add(fruita);
+		return new ResponseEntity<>(fruita, HttpStatus.CREATED);
 	}
 
-	@PutMapping("/fruita/update")
+	@PutMapping("/update")
 	@Override
-	public void update(@RequestBody Fruita fruita) {
+	public ResponseEntity<Fruita>  update(@RequestBody Fruita fruita) {
 		// update fruita
-		fruitaRepository.save(fruita);
+		fruitaService.update(fruita);
+		return new ResponseEntity<>(fruita, HttpStatus.OK);
 	}
 
-	@DeleteMapping("/fruita/delete/{id}")
+	@DeleteMapping("/delete/{id}")
 	@Override
-	public void delete(@PathVariable("id") Long id) {
-		// delete fruita
-		fruitaRepository.deleteById(id);
+	public ResponseEntity<HttpStatus> delete(@PathVariable("id") Long id) {
+		Optional<Fruita> fruita = fruitaService.getOne(id);
+		if(!fruita.isPresent()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		fruitaService.delete(id);
+		return new ResponseEntity<>(HttpStatus.OK);
+		
 	}
 
 	@Override
-	@GetMapping("/fruita/getOne/{id}")
-	public Optional<Fruita> getOne(@PathVariable("id") Long id) {
-		return fruitaRepository.findById(id);
+	@GetMapping("/getOne/{id}")
+	public ResponseEntity<Fruita>  getOne(@PathVariable("id") Long id) {
+		Optional<Fruita> fruita = fruitaService.getOne(id);
+		if(!fruita.isPresent()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(fruita.get(), HttpStatus.OK);
 	}
 
-	@GetMapping("/fruita/getAll")
+	@GetMapping("/getAll")
 	@Override
-	public List<Fruita> getAll() {
+	public ResponseEntity<List<Fruita>> getAll() {
+		
+		List<Fruita> fruites=new ArrayList<>();
 		// getAll Fruites
-		return fruitaRepository.findAll();
+		fruitaService.getAll().forEach(fruites::add);
+		if (fruites.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+		return new ResponseEntity<>(fruites, HttpStatus.OK);
 	}
 
 }
